@@ -1,10 +1,10 @@
 ## Version Comparison
 | Version  | Architecture | Data Processing | Scheduled Sampling | Key Features |
 |----------|-------------|-----------------|-------------------|--------------|
-| **v0**    | Keras Functional API                        | Close prices (MinMaxScaler), Pure teacher forcing, No decoder iteration during training |
-| **v0.5**  | Custom training loop with decoder iteration | Close prices (MinMaxScaler), Two-stage scheduled sampling (50% threshold)               |
-| **v0.6**  | Custom training loop with decoder iteration | **Price deltas** (StandardScaler), Two-stage scheduled sampling (50% threshold)         | **Failed experiment**: Delta features proved ineffective |
-| **v1**    | Custom training loop with decoder iteration | **Log prices** (StandardScaler), Enhanced scheduled sampling (30% threshold)            | The data pipeline used for attention models |
+| **v0**    | Keras Functional API                        | Close prices (MinMaxScaler)| Pure teacher forcing, No decoder iteration during training |
+| **v0.5**  | Custom training loop with decoder iteration | Close prices (MinMaxScaler)| Two-stage scheduled sampling (50% threshold)               |
+| **v0.6**  | Custom training loop with decoder iteration | **Price deltas** (StandardScaler)| Two-stage scheduled sampling (50% threshold)         | **Failed experiment**: Delta features proved ineffective |
+| **v1**    | Custom training loop with decoder iteration | **Log prices** (StandardScaler)| Enhanced scheduled sampling (30% threshold)            | The data pipeline used for attention models |
 
 ## Key Innovations by Version
 ### v0 → v0.5: From Static to Iterative Training
