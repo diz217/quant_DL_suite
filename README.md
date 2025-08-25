@@ -29,6 +29,13 @@ One can compare the results from:
 - `LSTM_attention_v2p5.py` (LSTM simple dot-product attention) 
 - `LSTM_v1.py` (pure LSTM)
 
+Parameters can be adjusted directly in the scripts (about 30-40 parameters), such as:
+- `pred_len` prediction horizon (e.g. 40 days)  
+- `seq_len` training data sequence length  
+- `seed` random seed    
+
+For detailed explanations of each version and design change, see the README files inside the `LSTM/` and `transformer/` subfolders.
+
 ## Directory 
 ```
 ├── LSTM/
