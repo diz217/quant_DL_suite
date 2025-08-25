@@ -21,13 +21,13 @@ pip install -r requirements
 │   │   ├── LSTM_attention_v2p5.py
 │   │   ├── LSTM_attention_v3.py
 │   │   ├── LSTM_attention_v4p5.py
-│   │   └── readme                
+│   │   └── readme.md                
 │   └── baseline/
 │       ├── LSTM_v0.py
 │       ├── LSTM_v0p5.py
 │       ├── LSTM_v0p6.py
 │       ├── LSTM_v1.py
-│       └── readme               
+│       └── readme.md               
 │
 ├── transformer/
 │   ├── TST_v0.py
@@ -35,16 +35,16 @@ pip install -r requirements
 │   ├── TST_v0p5.py
 │   ├── TST_v0p8.py
 │   ├── TST_v0p95.py
-│   └── readme                   
+│   └── readme.md                   
 │
 ├── LICENSE
 ├── README.md                     
 └── requirements
 
 ## Documentation
-- [LSTM/attention/readme](./LSTM/attention/readme) — details for attention-based LSTM  
-- [LSTM/baseline/readme](./LSTM/baseline/readme) — details for baseline LSTM  
-- [transformer/readme](./transformer/readme) — details for Transformer models           
+- [LSTM/attention/readme.md](./LSTM/attention/readme.md) — details for attention-based LSTM  
+- [LSTM/baseline/readme.md](./LSTM/baseline/readme.md) — details for baseline LSTM  
+- [transformer/readme.md](./transformer/readme.md) — details for Transformer models           
 
 ## License
 This project is released under the MIT License. See [LICENSE](./LICENSE) for details
