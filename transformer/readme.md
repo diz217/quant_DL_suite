@@ -12,6 +12,7 @@
 inputs → Dense(embed_dim) → Positional Encoding → 
 MultiHeadAttention(causal mask) → LayerNorm → FFN → LayerNorm → 
 last_token → Dense(pred_len) → price_predictions
+
 model learning rate: Warmup cosine decay scheduler 
 ## Multi-Task Models (v0.8, v0.95)
 ### Dual processing streams
