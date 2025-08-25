@@ -12,6 +12,22 @@ git clone https://github.com/<your-username>/<your-repo>.git
 cd <your-repo>
 pip install -r requirements
 ```
+Run an example (choose a model family):
+Transformer:
+```
+    python transformer/TST_run_.py
+```   
+LSTM:
+```
+    python LSTM/baseline/LSTM_run_.py
+```
+To change the stock ticker (e.g. AAPL, MSFT, TSLA), edit the corresponding `.py` file and modify the ticker symbol inside the code. Default is 'AMD'.
+Results are plots of training loss and predicted prices.  
+One can compare the results from:
+- `TST_v0p95.py` (self-attention MHA)  
+- `LSTM_attention_v2p5.py` (LSTM simple dot-product attention) 
+- `LSTM_v1.py` (pure LSTM)
+
 ## Directory 
 ```
 ├── LSTM/
