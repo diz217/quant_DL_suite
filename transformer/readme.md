@@ -13,14 +13,14 @@ inputs → Dense(embed_dim) → Positional Encoding →
 MultiHeadAttention → LayerNorm → FFN → LayerNorm → 
 last_token → Dense(pred_len) → price_predictions
 
-# Multi-Task Models (v0.8, v0.95)
-## Dual processing streams
+## Multi-Task Models (v0.8, v0.95)
+### Dual processing streams
 inputs → split into [base_features, signal_features]
-## Base stream (price prediction)
+### Base stream (price prediction)
 base_features → Transformer_base → price_head
-## Signal stream (trading signals)  
+### Signal stream (trading signals)  
 signal_features → Transformer_signal → trading_head
-## Final fusion
+### Final fusion
 fused = Concatenate([base_last_token, signal_last_token])
 trading_output = Dense(fused)
 
