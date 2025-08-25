@@ -8,11 +8,11 @@
 
 # Technical Architecture
 ## Single-Task Models (v0, v0.1)
-### Standard Transformer encoder
+### Standard Transformer encoder 
 inputs → Dense(embed_dim) → Positional Encoding → 
-MultiHeadAttention → LayerNorm → FFN → LayerNorm → 
+MultiHeadAttention(causal mask) → LayerNorm → FFN → LayerNorm → 
 last_token → Dense(pred_len) → price_predictions
-
+model learning rate: Warmup cosine decay scheduler 
 ## Multi-Task Models (v0.8, v0.95)
 ### Dual processing streams
 inputs → split into [base_features, signal_features]
