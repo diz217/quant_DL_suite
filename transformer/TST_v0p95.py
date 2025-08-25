@@ -287,7 +287,7 @@ class TST_v0p95:
         smoothed = gaussian_filter1d(tp_labels, sigma=2, axis=0, mode="nearest")
         smoothed = smoothed / smoothed.sum(axis=1, keepdims=True)
         self.tp_labels = tp_labels
-    def prepare(self,pred_len =60, seq_len=181,trn_rat=0.9,stop_loss=0.94,tp_lvls=[1.1,1.15,1.2]):
+    def prepare(self,pred_len =60, seq_len=181,trn_rat=0.9,stop_loss=0.94):
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.trn_rat = trn_rat
@@ -668,4 +668,5 @@ class BatchLossLogger1(Callback):
                 norm_w = tf.norm(w).numpy()
                 norm_b = tf.norm(b).numpy()
                 print(f"Batch {batch}, Dense layer {i}: weight norm = {norm_w:.4e}, bias norm = {norm_b:.4e}")
+
                 #break  
