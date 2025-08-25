@@ -45,3 +45,6 @@ pip install -r requirements
 - [LSTM/attention/readme](./LSTM/attention/readme) — details for attention-based LSTM  
 - [LSTM/baseline/readme](./LSTM/baseline/readme) — details for baseline LSTM  
 - [transformer/readme](./transformer/readme) — details for Transformer models           
+
+## License
+This project is released under the MIT License. See [LICENSE](./LICENSE) for details
