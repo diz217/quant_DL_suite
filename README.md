@@ -13,6 +13,7 @@ cd <your-repo>
 pip install -r requirements
 ```
 ## Directory 
+```
 ├── LSTM/
 │   ├── attention/
 │   │   ├── LSTM_attention_v0.py
@@ -40,6 +41,7 @@ pip install -r requirements
 ├── LICENSE
 ├── README.md                     
 └── requirements
+```
 
 ## Documentation
 - [LSTM/attention/readme.md](./LSTM/attention/readme.md) — details for attention-based LSTM  
