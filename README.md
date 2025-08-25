@@ -25,7 +25,7 @@ To change the stock ticker (e.g. AAPL, MSFT, TSLA), edit the corresponding `.py`
 Results over a forecast horizon include plots of predicted prices, profit-taking returns, and quantile-binned profit-taking probabilities. Training losses and attention weights are also plotted for quality control.
 
 One can compare the results from:
-- `TST_v0p95.py` (self-attention MHA, take-profit levels)  
+- `TST_v0p95.py` (self-attention MHA, take-profit returns)  
 - `LSTM_attention_v2p5.py` (LSTM simple dot-product attention) 
 - `LSTM_v1.py` (pure LSTM)
 
