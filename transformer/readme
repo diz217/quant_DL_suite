@@ -1,8 +1,8 @@
-|  Version  |       Architecture      | Features | Task | Key Characteristics |
-|-----------|-------------------------|------|-------------------|
-| **v0**    | Single-head Transformer | Basic financial features                  | Price prediction only                       | Baseline self-attention implementation |
-| **v0.1**  | Single-head Transformer | Extended technical features + Heikin Ashi | Price prediction only                       | Enhanced feature engineering |
-| **v0.8**  | Dual-head Transformer   | Features split into base/signal groups    | Multi-task: price + TP yield with stop loss | Accurate TP yield prediction |
+|  Version  |       Architecture      | Features                                  | Task                                        | Key Characteristics                                |
+|-----------|-------------------------|-------------------------------------------|---------------------------------------------|----------------------------------------------------|
+| **v0**    | Single-head Transformer | Basic financial features                  | Price prediction only                       | Baseline self-attention implementation             |
+| **v0.1**  | Single-head Transformer | Extended technical features + Heikin Ashi | Price prediction only                       | Enhanced feature engineering                       |
+| **v0.8**  | Dual-head Transformer   | Features split into base/signal groups    | Multi-task: price + TP yield with stop loss | Accurate TP yield prediction                       |
 | **v0.95** | Dual-head Transformer   | Same feature groups as v0.8               | Multi-task: price + TP probability bins     | TP probability bins based on TP yield distribution |
 
 ### Technical Architecture
