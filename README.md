@@ -20,8 +20,10 @@ LSTM:
 ```
     python LSTM/baseline/LSTM_run_.py
 ```
-To change the stock ticker (e.g. AAPL, MSFT, TSLA), edit the corresponding `.py` file and modify the ticker symbol inside the code. Default is 'AMD'.
+To change the stock ticker (e.g. AAPL, MSFT, TSLA), edit the corresponding `.py` file and modify the ticker symbol inside the code. The default ticker is 'AMD'.
+
 Results over a forecast horizon include plots of predicted prices, profit-taking returns, and quantile-binned profit-taking probabilities. Training losses and attention weights are also plotted for quality control.
+
 One can compare the results from:
 - `TST_v0p95.py` (self-attention MHA, take-profit levels)  
 - `LSTM_attention_v2p5.py` (LSTM simple dot-product attention) 
