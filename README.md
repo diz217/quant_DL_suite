@@ -35,6 +35,13 @@ Parameters can be adjusted directly in the scripts (about 30-40 parameters), suc
 - `seed` random seed    
 
 For detailed explanations of each version and design change, see the README files inside the `LSTM/` and `transformer/` subfolders.
+## Results
+Representative outputs from the models are shown below.
+
+**Transformer (TST_v0p95 & TST_v0p8)**  
+![Transformer windowed Predicted Prices](results/Price_prediction_TST_v0p8.png)  
+![Transformer windowed Profit-taking returns](results/TP_return_TST_v0p8.png)  
+![Transformer Training Loss](results/Loss_training_TST_v0p8.png)  
 
 ## Directory 
 ```
