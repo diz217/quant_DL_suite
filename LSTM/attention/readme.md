@@ -9,7 +9,7 @@
 | **v4**   | Multi-head (Dot-product) | Multi-head attention, Q-K-V decomposition, Parallel attention heads                  | **Modern architecture**: Scaled dot-product attention |
 | **v4.5** | Multi-head (Dot-product) | Configurable seed management, Restored evaluation pipeline, Training stability fixes | Production-ready multi-head attention |
 
-#Key Improvements by Version
+# Key Improvements by Version
 ### v0 → v1: Foundation Improvements
 Switched from price deltas to log prices
 Attention used to preprocess inputs before feeding to LSTM
