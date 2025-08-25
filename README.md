@@ -18,7 +18,7 @@ Transformer:
 ```   
 LSTM:
 ```
-    python LSTM/baseline/LSTM_run_.py
+    python LSTM/LSTM_run_.py
 ```
 To change the stock ticker (e.g. AAPL, MSFT, TSLA), edit the corresponding `.py` file and modify the ticker symbol inside the code. The default ticker is 'AMD'.
 
