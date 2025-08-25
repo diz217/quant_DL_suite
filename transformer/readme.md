@@ -10,7 +10,7 @@
 ## Single-Task Models (v0, v0.1)
 ### Standard Transformer encoder 
 inputs → Dense(embed_dim) → Positional Encoding → 
-MultiHeadAttention(causal mask) → LayerNorm → FFN → LayerNorm → 
+MultiHeadAttention (causal mask) → LayerNorm → FFN → LayerNorm → 
 last_token → Dense(pred_len) → price_predictions
 
 model learning rate: Warmup cosine decay scheduler 
