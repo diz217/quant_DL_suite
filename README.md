@@ -15,6 +15,7 @@ pip install -r requirements
 ## Directory 
 ```
 ├── LSTM/
+|   ├── LSTM_run_.py
 │   ├── attention/
 │   │   ├── LSTM_attention_v0.py
 │   │   ├── LSTM_attention_v1.py
@@ -36,11 +37,12 @@ pip install -r requirements
 │   ├── TST_v0p5.py
 │   ├── TST_v0p8.py
 │   ├── TST_v0p95.py
+|   ├── TST_run_.py
 │   └── readme.md                   
 │
 ├── LICENSE
 ├── README.md                     
-└── requirements
+└── requirements.txt
 ```
 
 ## Documentation
