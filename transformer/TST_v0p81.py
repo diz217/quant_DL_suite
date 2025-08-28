@@ -1,0 +1,615 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Aug 19 15:55:09 2025
+
+@author: diz217
+"""
+
+import yfinance as yf
+from datetime import datetime
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import numpy as np
+
+import ta
+from ta.trend import EMAIndicator, MACD
+from ta.volatility import BollingerBands
+from ta.volume import OnBalanceVolumeIndicator
+
+import random
+import matplotlib
+matplotlib.use('Agg')
+sns.set_style('whitegrid')
+plt.style.use('fivethirtyeight')
+from tensorflow.keras.layers import Dense,Input,MultiHeadAttention,Embedding,Add,LayerNormalization,Dropout,Lambda,Reshape,Activation,Concatenate
+from tensorflow.keras.models import load_model
+from tensorflow.keras import Sequential,Model
+from tensorflow.keras import optimizers
+from tensorflow.keras.callbacks import Callback
+from tensorflow.keras import mixed_precision
+mixed_precision.set_global_policy('float32')
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.metrics import mean_squared_error
+import tensorflow as tf
+from dateutil.relativedelta import relativedelta
+import time
+import pickle
+import math
+from collections import defaultdict
+
+def debug_wrapper(x,name):
+    tf.print(f"🧪 {name} — mean:", tf.reduce_mean(x), 
+             "max:", tf.reduce_max(x), 
+             "min:", tf.reduce_min(x))
+    return x
+        
+class BatchLossLogger(Callback):
+    def __init__(self,schedule,tot_batch,batchs_per_epoch,epoch,start):
+        super().__init__()
+        self.schedule = schedule
+        self.tot_batch = tot_batch
+        self.batch_times = []
+        self.batchs_per_epoch = batchs_per_epoch
+        self.epoch = epoch
+        self.batch_losses = defaultdict(list)
+        self.start_date = start
+    def on_train_batch_begin(self,batch,logs=None):
+        self.batch_start_time = time.time()
+    def on_train_batch_end(self, batch, logs=None):
+        step = tf.keras.backend.get_value(self.model.optimizer.iterations)
+        current_lr = self.schedule(step).numpy()
+                
+        duration = time.time() - self.batch_start_time
+        self.batch_times.append(duration)
+        avg_time = sum(self.batch_times) / len(self.batch_times)
+        remaining_batches = self.tot_batch - (batch + 1 + self.epoch * self.batchs_per_epoch)
+        remaining_time = remaining_batches * avg_time
+        mins, secs = divmod(remaining_time, 60)
+        self.batch_losses['loss'].append(logs.get('loss'))
+        self.batch_losses['tp_yield_loss'].append(logs.get('tp_yield_loss'))
+        self.batch_losses['y_hat_loss'].append(logs.get('y_hat_loss'))
+        print(f"\n Time: {self.start_date} Epoch:{self.epoch}, Batch {batch}: tp_loss = {logs['tp_yield_loss']:.3f}, y_loss = {logs['y_hat_loss']:.3f}, learning = {current_lr:.3e}, Est. time left: {int(mins):02d}:{int(secs):02d}")
+        
+    def on_epoch_begin(self, epoch, logs=None):
+        self.epoch = epoch
+
+    def set_steps_per_epoch(self, steps_per_epoch):
+        self.steps_per_epoch = steps_per_epoch
+
+class BatchLossLogger_1(Callback):
+    def __init__(self, schedule, epochs, start):
+        super().__init__()
+        self.schedule = schedule
+        self.epochs = epochs
+        self.start_date = start
+        self.epoch_times = []
+        self.epoch_start_time = None
+        
+    def on_epoch_begin(self, epoch, logs=None):
+        self.epoch = epoch
+        self.epoch_start_time = time.time()
+        
+    def on_epoch_end(self, epoch, logs=None):
+        step = tf.keras.backend.get_value(self.model.optimizer.iterations)
+        current_lr = self.schedule(step).numpy()
+                
+        duration = time.time() - self.epoch_start_time
+        self.epoch_times.append(duration)
+        avg_time = sum(self.epoch_times) / len(self.epoch_times)
+        remaining_epochs = self.epochs - (epoch + 1)
+        remaining_time = remaining_epochs * avg_time
+        mins, secs = divmod(remaining_time, 60)
+    
+        print(f"\n Time: {self.start_date} Epoch:{epoch}, tp_loss = {logs['tp_yield_loss']:.3f}, y_loss = {logs['y_hat_loss']:.3f}, learning = {current_lr:.3e}, Est. time left: {int(mins):02d}:{int(secs):02d}")
+        
+class TST_v0p8:
+    def __init__(self):
+        self.model = None
+        self.history = None
+        self.cb = None
+        
+        self.scaler_logcls = StandardScaler() #standard
+        self.scaler_logopn = StandardScaler() #standard
+        self.scaler_loghigh = StandardScaler() #standard
+        self.scaler_loglow = StandardScaler() #standard
+        self.scaler_logema = StandardScaler()  # standard
+        self.scaler_loghahigh = StandardScaler() #standard
+        self.scaler_loghalow = StandardScaler() #standard
+
+        self.scaler_bb = MinMaxScaler(feature_range=(0,1)) # min max
+        self.scaler_body = MinMaxScaler(feature_range=(0,1)) #min max
+        self.scaler_wick = MinMaxScaler(feature_range=(0,1)) #min max
+        
+        self.dataset = None
+        self.trn_len = None
+        
+        self.x_encoder = []
+        self.x_decoder = []
+        self.y_target = []
+        self.y_signal = []
+        
+        self.x_tst = []
+        self.y_tst = []
+        self.y_tsi = []
+        self.rmse = None
+
+
+        self.seq_len = None
+        self.pred_len = None
+        
+        self.nums_feat = None
+        self.head_base = None
+        self.head_sig = None
+        self.embed_dim = None
+        self.embed_sig = None
+        self.ff_dim = None
+        self.ff_sig = None
+        
+        self.dropout_rate = None
+        self.tn_layers = None
+        self.base_lr = None
+        self.clipnorm = None
+        self.lr_schedule = None
+    
+        self.y_pred = []
+        self.y0_pred = []
+
+        self.tp_pred = None
+        self.tp_pred_ = None
+        self.tp_true = None
+        self.true_opn = None
+        self.true_hgh = None
+        self.true_low = None
+        self.true_cls = None
+        
+        self.tot_batch = None
+        self.steps_per_epoch = None
+        
+        self.yhat_loss = None
+        self.val_yhat_loss = None
+        self.tps_loss = None
+        self.val_tps_loss = None
+        
+        self.importance_df = None
+        self.importance = None
+        self.base_mse = None
+        
+        self.tp_lvls=None
+        self.stop_loss=None
+    def hashem_rsi(self,close_series, rsilen=14,smth=1):
+        rsi0 = ta.momentum.rsi(close_series,window=rsilen,fillna=False)
+        rsi_sma = rsi0.rolling(smth).mean()
+        rsi_ema = rsi0.ewm(span=smth,adjust=False).mean()
+        rsi_avg = (rsi_ema+rsi_sma)/2
+        rsi_avg = rsi_avg.bfill()
+        return rsi_avg
+    def rsi_zones(self,rsi):
+        rsi_zone = np.zeros_like(rsi,dtype=float)
+        rsi_zone[(rsi >= 65) & (rsi < 85)]  =  1.0   # Bull zone
+        rsi_zone[(rsi >= 85)]               = -1.0  # Overbought reversal
+        rsi_zone[(rsi >= 25) & (rsi < 45)]  = -1.0  # Bear zone
+        rsi_zone[(rsi < 25)]                =  1.0  # Oversold reversal
+        return rsi_zone
+    def bb_squeeze(self,bw,thr,window=5):
+        return bw.le(thr).rolling(window,min_periods=1).mean()  
+    def obv_slope_tanh(self,obv,w=50,eps=1e-6):
+        obv = np.asarray(obv, float)
+        d1 = np.diff(obv, prepend=obv[0])               # 一阶差分：当天净流入方向
+        vol = pd.Series(d1).rolling(w, min_periods=w//2).std().bfill().values + eps
+        z = d1 / vol                                     # 按近期波动缩放，保留正负
+        return np.tanh(z).astype(np.float32)             # 压到 [-1,1] 
+    def load_data(self,ticker,start,N=5):
+        self.ticker = ticker
+        self.start = start
+        self.end = start + relativedelta(years=N)
+        if self.end>datetime.now(): raise ValueError(f"End time {self.end} cannot exceeed the current time")
+        self.dataset = yf.download(ticker,start,self.end)
+        # heikin ashi candle
+        ha_close = (self.dataset[('Open',ticker)]+self.dataset[('Close',ticker)]+self.dataset[('High',ticker)]+self.dataset[('Low',ticker)])/4
+        ha_open = [(self.dataset[('Open',ticker)].iloc[0]+self.dataset[('Close',ticker)].iloc[0])/2]
+        for i in range(1,len(self.dataset[('Open',ticker)].values)):
+            ha_open.append((ha_open[i-1]+ha_close.iloc[i-1])/2)
+        self.dataset[('ha_close',ticker)] = ha_close
+        self.dataset[('ha_open',ticker)] = ha_open
+        self.dataset[('ha_high',ticker)] = self.dataset[[('ha_open', ticker), ('ha_close', ticker), ('High', ticker)]].max(axis=1)
+        self.dataset[('ha_low',ticker)] = self.dataset[[('ha_open', ticker), ('ha_close', ticker), ('Low', ticker)]].min(axis=1)
+            
+        # EMA, trend
+        ema = EMAIndicator(close=self.dataset[('Close',ticker)],window=10)
+        self.dataset[('ema',ticker)] = ema.ema_indicator()
+        # macd_diff, trend differentiation
+        macd = MACD(close=self.dataset[('Close',ticker)])
+        self.dataset[('macd_diff',ticker)] = macd.macd_diff()
+        max_macd = self.dataset[('macd_diff',ticker)].abs().max()
+        
+        # rsi, momentum
+        self.dataset[('rsi_14',ticker)] = self.hashem_rsi(self.dataset[('Close',ticker)])
+        
+        # bollinger band width, volatility
+        bb = BollingerBands(close=self.dataset[('Close',ticker)])
+        self.dataset[('bb_bandwidth',ticker)] = (bb.bollinger_hband()-bb.bollinger_lband())/bb.bollinger_mavg()
+        thr = self.dataset[('bb_bandwidth',ticker)].quantile(0.3)
+        
+        # obv, energy
+        obv = OnBalanceVolumeIndicator(close=self.dataset[('Close',ticker)],volume=self.dataset[('Volume',ticker)])
+        self.dataset[('obv',ticker)] = obv.on_balance_volume()
+        
+        # heikin ashi candle, body 
+        self.dataset[('ha_body',ticker)] =  self.dataset[('ha_close',ticker)]-self.dataset[('ha_open',ticker)]
+        # heikin ashi candle, tick ratio
+        self.dataset[('ha_wick_rat',ticker)] = (self.dataset[('ha_high',ticker)]-self.dataset[('ha_low',ticker)])/abs(1e-6+self.dataset[('ha_body',ticker)])
+        columns = self.dataset.columns.to_list()
+        
+        any_nan_mask = self.dataset[columns].isna().any(axis=1)
+        last_nan_idx = self.dataset[any_nan_mask].index.max()
+        last_nan_pos = self.dataset.index.get_loc(last_nan_idx)
+        self.dataset = self.dataset.iloc[last_nan_pos+1:].reset_index(drop=False)
+        
+        self.dataset[('macd_scl',ticker)] = self.dataset[('macd_diff',ticker)]/max_macd
+        self.dataset[("rsi_zone",ticker)] = self.rsi_zones(self.dataset[('rsi_14',ticker)].values)
+        self.dataset[('bb_squeeze',ticker)] = self.bb_squeeze(self.dataset[('bb_bandwidth',ticker)],thr,window=5)
+        self.dataset[('obv_slope',ticker)] = self.obv_slope_tanh(self.dataset[('obv',ticker)],w=50,eps=1e-6)
+    def compute_confident_levels(self,pred_len=60,stop_loss=0.94):
+        self.stop_loss = stop_loss
+        ha_high = self.dataset[('ha_high',self.ticker)].to_numpy()
+        ha_low = self.dataset[('ha_low',self.ticker)].to_numpy()
+        highs = self.dataset[('High',self.ticker)].to_numpy()
+        lows = self.dataset[('Low',self.ticker)].to_numpy()
+        
+        short_loss = 2-stop_loss
+        profits = []
+        for i,entry in enumerate(self.dataset[('Open',self.ticker)].to_numpy()):
+            line = 1.0;add = 0         
+            rng_max = min(pred_len,len(highs)-i)
+            
+            for j in range(0,rng_max):
+                if lows[i+j]/entry<=stop_loss:
+                    profits.append(line-1)
+                    add = 1
+                    break
+                line = max(line,ha_high[i+j]/entry)
+            if not add: profits.append(line-1)
+            if line+stop_loss<2: 
+                profits.pop()
+                line = 1.0; add = 0
+                for j in range(0,rng_max):
+                    if highs[i+j]/entry>=short_loss:
+                        profits.append(line-1)
+                        add = 1
+                        break
+                    line = min(line,ha_low[i+j]/entry)
+                if not add: profits.append(line-1)
+                if line+short_loss>2: 
+                    profits.pop()
+                    profits.append(0)
+        self.dataset[('tp',self.ticker)] = profits
+    def compute_confident_levels_(self,y0_pred):
+        stop_loss = self.stop_loss        
+        short_loss = 2-stop_loss
+        profits = []
+        for i,entry in enumerate(y0_pred):
+            line = 1.0;add = 0         
+            rng_max = min(self.pred_len,len(y0_pred)-i)
+            
+            for j in range(0,rng_max):
+                if y0_pred[i+j]/entry<=stop_loss:
+                    profits.append(line-1)
+                    add = 1
+                    break
+                line = max(line,y0_pred[i+j]/entry)
+            if not add: profits.append(line-1)
+            if line+stop_loss<2: 
+                profits.pop()
+                line = 1.0; add = 0
+                for j in range(0,rng_max):
+                    if y0_pred[i+j]/entry>=short_loss:
+                        profits.append(line-1)
+                        add = 1
+                        break
+                    line = min(line,y0_pred[i+j]/entry)
+                if not add: profits.append(line-1)
+                if line+short_loss>2: 
+                    profits.pop()
+                    profits.append(0)
+        return profits[0]
+    def prepare(self,pred_len =40, seq_len=365,stop_loss=0.94):
+        self.seq_len = seq_len
+        self.pred_len = pred_len
+        
+        self.compute_confident_levels(pred_len=pred_len,stop_loss=stop_loss)
+        #======predict header=====
+        close = self.dataset[('Close',self.ticker)].values
+        logcls = np.log(close)
+        opn = self.dataset[('Open',self.ticker)].values
+        logopn = np.log(opn)
+        high = self.dataset[('High',self.ticker)].values
+        loghgh = np.log(high)
+        low = self.dataset[('Low',self.ticker)].values
+        loglow = np.log(low)
+        ema = self.dataset[('ema',self.ticker)].values
+        logema = np.log(ema)
+        #======tp header=====
+        ha_high = self.dataset[('ha_high',self.ticker)].values
+        logha_h = np.log(ha_high)
+        ha_low = self.dataset[('ha_low',self.ticker)].values
+        logha_l = np.log(ha_low)
+        macd_scl = self.dataset[('macd_scl',self.ticker)].values
+        rsi_z = self.dataset[('rsi_zone',self.ticker)].values
+        bb_band = self.dataset[('bb_squeeze',self.ticker)].values
+        obv_slope = self.dataset[('obv_slope',self.ticker)].values      
+        tp = self.dataset[('tp',self.ticker)].values
+        
+        trn_len = len(close)-pred_len
+        self.trn_len = trn_len
+        
+        trn_data = self.scaler_logcls.fit_transform(logcls[:trn_len].reshape(-1, 1))  #standard
+        trn_opn = self.scaler_logopn.fit_transform(logopn[:trn_len].reshape(-1, 1))  # standard
+        trn_hgh = self.scaler_loghigh.fit_transform(loghgh[:trn_len].reshape(-1, 1)) # standard
+        trn_low = self.scaler_loglow.fit_transform(loglow[:trn_len].reshape(-1, 1))  # standard
+        trn_ema = self.scaler_logema.fit_transform(logema[:trn_len].reshape(-1, 1))  # standard
+        trn_macd = macd_scl[:trn_len].reshape(-1, 1)
+        trn_rsi = rsi_z[:trn_len].reshape(-1, 1)
+        trn_bb = self.scaler_bb.fit_transform(bb_band[:trn_len].reshape(-1, 1))  # min max
+        trn_obv = obv_slope[:trn_len].reshape(-1, 1) 
+        trn_hah = self.scaler_loghahigh.fit_transform(logha_h[:trn_len].reshape(-1, 1)) # min max
+        trn_hal = self.scaler_loghalow.fit_transform(logha_l[:trn_len].reshape(-1, 1))  # min max
+        trn_tp = tp[:trn_len].reshape(-1, 1)  
+        
+        trn_set = np.hstack([trn_data,trn_opn,trn_hgh,trn_low,trn_ema,trn_hah,trn_hal,trn_macd,trn_rsi,trn_bb,trn_obv])
+        for i in range(seq_len,trn_len-pred_len):
+            self.x_encoder.append(trn_set[i-seq_len:i,:])
+            self.x_decoder.append(trn_data[i-1:i+pred_len-1])
+            self.y_target.append(trn_data[i:i+pred_len])
+            self.y_signal.append(trn_tp[i,:])  
+        self.x_encoder = np.array(self.x_encoder) # 700,365,12
+        self.nums_feat = self.x_encoder.shape[-1]
+        self.x_decoder = np.array(self.x_decoder) # 700,40,1
+        self.y_target = np.array(self.y_target) # 700,40,1
+        self.y_signal = np.array(self.y_signal) # 700,1
+        
+        tst_data = self.scaler_logcls.transform(logcls[trn_len-seq_len:].reshape(-1, 1))
+        tst_opn = self.scaler_logopn.transform(logopn[trn_len-seq_len:].reshape(-1, 1))
+        tst_hgh = self.scaler_loghigh.transform(loghgh[trn_len-seq_len:].reshape(-1, 1))
+        tst_low = self.scaler_loglow.transform(loglow[trn_len-seq_len:].reshape(-1, 1))
+        tst_ema = self.scaler_logema.transform(logema[trn_len-seq_len:].reshape(-1, 1))
+        tst_macd = macd_scl[trn_len-seq_len:].reshape(-1, 1)
+        tst_rsi = rsi_z[trn_len-seq_len:].reshape(-1, 1)
+        tst_bb = self.scaler_bb.transform(bb_band[trn_len-seq_len:].reshape(-1, 1))
+        tst_obv = obv_slope[trn_len-seq_len:].reshape(-1, 1)
+        tst_hah = self.scaler_loghahigh.transform(logha_h[trn_len-seq_len:].reshape(-1, 1))
+        tst_hal = self.scaler_loghalow.transform(logha_l[trn_len-seq_len:].reshape(-1, 1))
+        tst_tp = tp[trn_len-seq_len:].reshape(-1, 1)
+
+        tst_set = np.hstack([tst_data,tst_opn,tst_hgh,tst_low,tst_ema,tst_hah,tst_hal,tst_macd,tst_rsi,tst_bb,tst_obv])
+        print(f'{trn_len} {seq_len} {len(tst_data)}')
+        for i in range(seq_len,len(tst_data)-pred_len+1):    
+            self.x_tst.append(tst_set[i-seq_len:i,:])
+            self.y_tst.append(tst_data[i:i+pred_len])
+            self.y_tsi.append(tst_tp[i,:])
+        self.x_tst = np.array(self.x_tst) # 122,365,12
+        self.y_tst = np.array(self.y_tst)
+        self.y_tsi = np.array(self.y_tsi)
+    def build(self, seed = 0, embed_dim=128, ff_dim = 256, head_base = 4, dropout_rate = 0.1, 
+              embed_sig = 32, head_sig = 2, ff_sig = 64,
+              base_lr = 1e-4, clipnorm = 1.0, batch_size=32, epochs=50,warmup_epoch=10):
+        tf.keras.utils.set_random_seed(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        
+        self.head_base = head_base
+        self.head_sig = head_sig
+        self.embed_dim = embed_dim
+        self.embed_sig = embed_sig
+        self.ff_dim = ff_dim
+        self.ff_sig = ff_sig
+        self.dropout_rate = dropout_rate
+        self.base_lr = base_lr
+        self.clipnorm = clipnorm
+       
+        K = self.y_signal.shape[-1]
+        
+        self.base_idx = [0,1,2,3,4]; self.signal_idx = [5,6,7,8,9,10]
+        inputs = Input(shape=(self.seq_len,self.nums_feat)) #none, seq_len,features
+        x_base =Lambda(lambda t: tf.gather(t,self.base_idx,axis=-1),name='slice_base',output_shape=(self.seq_len, len(self.base_idx)))(inputs)
+        x_signal =Lambda(lambda t: tf.gather(t,self.signal_idx,axis=-1),name='slice_signal',output_shape=(self.seq_len, len(self.signal_idx)))(inputs)
+        #inputs = Lambda(lambda t: debug_wrapper(t, "model_inputs"))(inputs)
+     
+        # ============================target head===========================
+        x = Dense(embed_dim,name='base_embed')(x_base) # none, seq_len,embed_dim
+        #x = Lambda(lambda t: debug_wrapper(t, "dense_proj_out"))(x)
+        
+        # Positional encoding
+        pos = tf.range(start=0,limit=self.seq_len,delta=1)
+        pos_base_encode = Embedding(input_dim=self.seq_len,output_dim=embed_dim,name='pos_base_emb')(pos)
+        x = x+pos_base_encode 
+        #x = Lambda(lambda t: debug_wrapper(t, "pos_encoding_added"))(x)
+        
+        # Multi-head self-attention+ Causal mask
+        attn_base = MultiHeadAttention(num_heads=head_base,key_dim=embed_dim,dropout=dropout_rate,name='mha_base')(x,x,use_causal_mask=True)
+        x = Add()([x,attn_base])
+        x = LayerNormalization(name='mha_base_ln')(x) 
+        #x = Lambda(lambda t: debug_wrapper(t, "after_mha_norm"))(x)
+        
+        # Feed-forward network
+        ff_output = Sequential([Dense(ff_dim,activation='relu'),Dropout(dropout_rate),Dense(embed_dim)],name='ffn_base')(x)
+        x = Add()([x,ff_output])
+        x = LayerNormalization(name='ffn_base_ln')(x)
+        #x = Lambda(lambda t: debug_wrapper(t, "after_ffn_norm"))(x)
+        last_token = Lambda(lambda t: t[:, -1, :],name='base_last')(x)  # last day of seq len
+        
+        pred_vec   = Dense(self.pred_len,name='y_vec')(last_token)  # (batch, 40)
+        y_hat    = Reshape((self.pred_len, 1),name='y_hat')(pred_vec)  # (batch, 40, 1)
+        
+        ## ============================signal head===========================
+        x_sig = Dense(embed_sig,name='sig_embed')(x_signal)
+        
+        pos_sig_encode = Embedding(input_dim=self.seq_len,output_dim=embed_sig,name='pos_sig_emb')(pos) #reuse position
+        x_sig = x_sig+pos_sig_encode
+        
+        attn_sig = MultiHeadAttention(num_heads=head_sig,key_dim=embed_sig,dropout=dropout_rate,name='mha_sig')(x_sig,x_sig,use_causal_mask=True)
+        x_sig = Add()([x_sig,attn_sig])
+        x_sig = LayerNormalization(name='mha_sig_ln')(x_sig)
+        
+        ff_sig = Sequential([Dense(ff_sig,activation='relu'),Dropout(dropout_rate),Dense(embed_sig)],name='ffn_sig')(x_sig)
+        x_sig = Add()([x_sig,ff_sig])
+        x_sig = LayerNormalization(name='ff_sig_ln')(x_sig)
+        
+        last_sig = Lambda(lambda t: t[:, -1, :], name="sig_last")(x_sig) # batch, embed_sig
+        #token_detached = Lambda(lambda t:tf.stop_gradient(t),name='last_detached')(last_token)
+        fused = Concatenate(name='prob_fuse')([last_token,last_sig]) # batch, embed_sig+embed_dim
+        #fused = Concatenate(name='prob_fuse')([token_detached,last_sig]) # batch, embed_sig+embed_dim
+        tp_yield = Dense(K, name="tp_yield")(fused) #batch,1
+        
+        # warm up + gradient clipping 
+        self.steps_per_epoch = self.x_encoder.shape[0]//batch_size
+        self.lr_schedule = Warmupcosine(base_lr=base_lr, total_steps = epochs * self.steps_per_epoch, warmup_steps=warmup_epoch* self.steps_per_epoch)
+        
+        # model 封装
+        model = Model(inputs=inputs,outputs=[tp_yield,y_hat])
+        opt = optimizers.Adam(learning_rate=self.lr_schedule,clipnorm=clipnorm)
+
+        model.compile(loss={'tp_yield':tf.keras.losses.Huber(),'y_hat':'mse'},optimizer=opt,
+                      loss_weights={'tp_yield':0.5,'y_hat':1})
+        self.model = model
+    def fit(self,batch_size=32, epochs=50):
+        #cb = BatchLossLogger(self.x_encoder,self.y_target,batch_size)
+        #steps_per_epoch = math.ceil(self.x_encoder.shape[0]/batch_size)
+        #self.tot_batch = epochs*self.steps_per_epoch
+        #self.cb = BatchLossLogger(self.lr_schedule,self.tot_batch,self.steps_per_epoch,epochs,self.start)
+        self.cb = BatchLossLogger_1(self.lr_schedule, epochs, self.start)
+        self.history = self.model.fit(self.x_encoder,{'tp_yield':self.y_signal,'y_hat':self.y_target},
+                                      validation_data=[self.x_tst,{'tp_yield':self.y_tsi,'y_hat':self.y_tst[0:10]}],
+                                      epochs=epochs,batch_size=batch_size,
+                                      verbose=2,callbacks=[self.cb])
+    def predict(self,seed=0,path='./',i=0,ema_span=21):
+        #=========================predict==================================
+        x_tst = self.x_tst[i:i+1]
+        tp_pred, y_pred = self.model.predict(x_tst,verbose=0) # 1X1, 1X40X1
+        tp_true = self.y_tsi[i]
+        tp_pred = tp_pred.squeeze()
+        self.tp_pred = tp_pred       
+        self.tp_true = tp_true
+        K = tp_true.shape[-1]
+        #=========================yhat plot==================================
+        self.y_pred = y_pred[0] # 40X1
+        y0_pred = self.scaler_logcls.inverse_transform(self.y_pred).flatten() #40,
+        self.y0_pred = np.exp(y0_pred)
+        self.tp_pred_ = self.compute_confident_levels_(self.y0_pred)
+        
+        tst_dataset = self.dataset[self.trn_len+i:self.trn_len+i+self.pred_len]
+        tst_dataset = tst_dataset.copy()
+        tst_dataset[('Pred',self.ticker)] = self.y0_pred
+        y0_true = tst_dataset[('Close',self.ticker)].values
+        self.true_opn = tst_dataset[('Open',self.ticker)].values
+        self.true_hgh = tst_dataset[('High',self.ticker)].values
+        self.true_low = tst_dataset[('Low',self.ticker)].values
+        self.true_cls = tst_dataset[('Close',self.ticker)].values
+        self.rmse = np.sqrt(np.mean((self.y0_pred-y0_true)**2))
+
+        EMA_21 = self.dataset['Close'].ewm(span=ema_span,adjust=False).mean() 
+        self.dataset[('ema21',self.ticker)] = EMA_21
+        trn_dataset = self.dataset[:self.trn_len]  
+        
+        plt.figure(figsize=(16,6))
+        plt.title(f'Price head {seed} {self.ticker} pred {self.seq_len}-{self.pred_len}Day')
+        plt.xlabel('Date', fontsize=18)
+        plt.ylabel('Close Price USD ($)', fontsize=18)
+        plt.plot(trn_dataset['Close'],linestyle='--',marker='o',markersize=3,linewidth=1)
+        plt.plot(tst_dataset[['Close','Pred']],linestyle='--',marker='o',markersize=3,linewidth=1)
+        plt.plot(self.dataset['ema21'],linestyle='--',marker='o',markersize=3,linewidth=1)
+        plt.legend(['Train', f'Test Vals,tp_yield: {tp_true[0]}', 
+                    f'Predictions,tp_yield: {tp_pred:.3f}','EMA 21 Days'],
+                   ncol=1,loc='upper left')
+        plt.tight_layout()
+        plt.show(block=False)
+        start_str = self.start.strftime('%Y-%m-%d_%H-%M-%S')
+        plt.savefig(f'{path}{self.ticker} Price v0p8 {seed} {self.seq_len}-{self.pred_len} {start_str} Panel')        
+        #=========================TP yield plot==================================
+        x = np.concatenate([self.x_encoder,self.x_tst[:i+1]])
+        tp_preds, y_preds = self.model.predict(x,verbose=0)
+        tp_trues = np.concatenate([self.y_signal,self.y_tsi[:i+1]])
+        y_opns = self.dataset['Open'].iloc[self.seq_len:self.trn_len-self.pred_len+i+1]  
+        y_hghs = self.dataset['High'].iloc[self.seq_len:self.trn_len-self.pred_len+i+1]  
+        y_lows = self.dataset['Low'].iloc[self.seq_len:self.trn_len-self.pred_len+i+1]  
+        
+        fig,axes = plt.subplots(2,1,figsize=(16,14))
+        axes[0].set_title('Highs,Lows,Opens')
+        axes[0].set_xlabel('Date', fontsize=18)
+        axes[0].set_ylabel('Price head ($USD)', fontsize=18)
+        axes[0].plot(y_opns,linestyle='--',marker='o',markersize=3,linewidth=1)
+        axes[0].plot(y_hghs,linestyle='--',marker='o',markersize=3,linewidth=1)
+        axes[0].plot(y_lows,linestyle='--',marker='o',markersize=3,linewidth=1)
+        axes[0].legend(['Opens','Highs','Lows'])
+        axes[0].grid(True)
+        
+        axes[1].set_title('TP yield head')
+        axes[1].set_xlabel('Date', fontsize=18)
+        axes[1].set_ylabel('40 Day TP yield %', fontsize=18)
+        axes[1].plot(100*tp_trues.flatten(),linestyle='--',marker='o',markersize=3,linewidth=1)
+        axes[1].plot(100*tp_preds.flatten(),linestyle='--',marker='o',markersize=3,linewidth=1)
+        axes[1].legend(['Trues','Predictions'])
+        axes[1].grid(True)
+        
+        plt.tight_layout()
+        plt.show(block=False)
+        plt.savefig(f'{path}{self.ticker} TP_yield v0p8 {seed} {self.seq_len} {self.pred_len} {start_str}')         
+    def save(self,seed=0, path='./'):
+        self.model.save(f'{path}Transformer6_v0p8_{self.ticker}_{self.seq_len}_{self.pred_len}.keras')
+        
+        with open(f'{path}Transformer6_history_v0p8_{self.ticker}_{self.seq_len}_{self.pred_len}.pkl','wb') as f:
+            pickle.dump(self.history,f)
+    def load(self,seed=0, path='./'):
+        self.model = load_model(f'{path}Transformer6_v0p8_{self.ticker}_{self.seq_len}_{self.pred_len}.keras',compile=False,safe_mode=False)
+        
+        with open(f'{path}Transformer6_history_v0p8_{self.ticker}_{self.seq_len}_{self.pred_len}.pkl','rb') as f:
+            self.history = pickle.load(f)
+    def compute_importance(self, i=0, seed=0, scoring='neg_mean_squared_error'): 
+        feature_cols = ['close', 'open','high','low','ema', 'ha_hgh','ha_low','macd_scl', 'rsi_zone','bb_squeeze', 'obv_slope']
+        rng = np.random.RandomState(seed)
+        results = []
+        for j,feat_name in enumerate(feature_cols):
+            deltas = []
+            mses = []
+            for ii in range(i,min(i+5,self.x_tst.shape[0])):  
+                tps0_pred,_ = self.model.predict(self.x_tst[ii:ii+1],verbose=0)
+                base_mse = mean_squared_error(self.y_tsi[ii],tps0_pred[0])
+                
+                x_perturb = self.x_tst[ii].copy()
+                x_perturb[:,j] = rng.permutation(x_perturb[:, j])
+                tps_pred,_ = self.model.predict(x_perturb.reshape(1,self.seq_len,x_perturb.shape[-1]),verbose=0)
+                deltas.append(mean_squared_error(self.y_tsi[ii],tps_pred[0])-base_mse)
+                mses.append(base_mse)
+            results.append({'feature': feat_name,'base_mse':np.mean(mses),'importance_mean': np.mean(deltas),'importance_std': np.std(deltas)})
+        
+        #self.importance_df = pd.DataFrame(results).sort_values(by='importance_mean',ascending=False)
+        self.importance_df = pd.DataFrame(results)
+        self.importance = self.importance_df['importance_mean'].values
+        return self.importance, self.importance_df['base_mse'].values
+                        
+class Warmupcosine(optimizers.schedules.LearningRateSchedule):
+    def __init__(self,base_lr,total_steps,warmup_steps,min_lr=1e-5):
+        super().__init__()
+        self.base_lr = base_lr
+        self.tot_stps = total_steps
+        self.warmup_steps = warmup_steps
+        self.min_lr = min_lr
+    def __call__(self,step):
+        step = tf.cast(step, tf.float32)
+        def warmup():
+            return self.base_lr*step/self.warmup_steps
+        def decay():
+            progress = (step-self.warmup_steps)/(self.tot_stps-self.warmup_steps)
+            cosine_decay  =0.5*(1+tf.cos(np.pi*progress))
+            return self.min_lr+(self.base_lr-self.min_lr)*cosine_decay
+
+        return tf.cond(step < self.warmup_steps, warmup, decay)
+    def get_config(self):
+        return {
+            "base_lr": self.base_lr,
+            "total_steps": self.tot_stps,
+            "warmup_steps": self.warmup_steps,
+            "min_lr": self.min_lr,
+        }
+
