@@ -67,8 +67,11 @@ Representative outputs from the models are shown below.
 │   ├── TST_v0p1.py
 │   ├── TST_v0p5.py
 │   ├── TST_v0p8.py
+|   ├── TST_v0p81.py
 │   ├── TST_v0p95.py
 |   ├── TST_run_.py
+|   ├── TST_run_yr_yield.py
+|   ├── cal_sharpe.py
 │   └── readme.md                   
 │
 ├── LICENSE
