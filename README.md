@@ -1,8 +1,13 @@
 # Quantitative Deep Learning Suite
 
 ## Overview
-This repository hosts experimental deep learning architectures for financial time-series forecasting. The focus is on sequential models (LSTM, Transformer) applied to stock market data with engineered technical indicators.  
-The repository is organized by model family, with each directory containing multiple versioned implementations that highlight different design choices.
+This repository hosts experimental deep learning architectures for financial time-series forecasting. The models combine LSTM and Transformer backbones with attention mechanisms and engineered technical indicators.
+Beyond the prediction of pricec and probabilities, the framework integrates backtested trading strategies that evaluate:
+-Sharpe ratio for risk-adjusted performance
+-Maximum drawdown for downside risk assessment
+-Total yield (cumulative return) across different horizons
+
+These metrics allow not only inspection of model fit (losses, predictions, attention maps) but also assessment of practical trading performance over rolling windows.
 
 ## Quick Start
 Clone the repository and install dependencies:
