@@ -4,11 +4,11 @@
 This repository hosts experimental deep learning architectures for financial time-series forecasting. The models combine LSTM and Transformer backbones with attention mechanisms and engineered technical indicators.
 Beyond the prediction of pricec and probabilities, the framework integrates backtested trading strategies that evaluate:
 
-**Risk-Adjusted Performance:** Sharpe ratio analysis
+- **Risk-Adjusted Performance:** Sharpe ratio analysis
 
-**Downside Risk Assessment:** Maximum drawdown calculation  
+- **Downside Risk Assessment:** Maximum drawdown calculation  
 
-**Return Analysis:** Total yield (cumulative return) across different time horizons
+- **Return Analysis:** Total yield (cumulative return) across different time horizons
 
 These metrics allow not only inspection of model fit (losses, predictions, attention maps) but also assessment of practical trading performance over rolling windows.
 
