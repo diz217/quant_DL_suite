@@ -36,6 +36,8 @@ Feature separation: Distinct processing of price vs signal features
 Dual-stream design: Independent Transformer heads for different tasks
 Take-profit integration: Accurate continuous TP yield prediction
 
+v0.8 → v0.8: optimized callbacks and parameterization for backtesting a tp-yield based strategy
+
 v0.8 → v0.95: Classification Experiment
 Probability binning: Attempted to convert TP yields to risk categories
 Soft labeling: Gaussian smoothing for label assignment
