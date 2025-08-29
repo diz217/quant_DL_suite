@@ -19,7 +19,8 @@ git clone https://github.com/<your-username>/<your-repo>.git
 cd <your-repo>
 pip install -r requirements
 ```
-Run an example (choose a model family):
+### Run an example (choose a model family):
+
 Transformer:
 ```
     python transformer/TST_run_.py
@@ -44,7 +45,7 @@ Parameters can be adjusted directly in the scripts (about 30-40 parameters), suc
 
 For detailed explanations of each version and design change, see the README files inside the `LSTM/` and `transformer/` subfolders.
 
-**Backtesting (Sharpe, Yield, Drawdown)**:
+### Backtesting (Sharpe, Yield, Drawdown):
 ```
     python transformer/TST_run_yr_yield.py
     python transformer/cal_sharpe.py
@@ -65,7 +66,7 @@ The first script runs Training, predicting, strategy devising and feedback run s
 The second script (```cal_sharpe.py```) aggregates performance by computing cumulative yield and statistical metrics such as Sharpe ratio and peak-to-trough drawdown.
 
 The script contains very important superparameters: 
-- `Start`,`end` training data window
+- `start`,`end` training data window
 - `Stop_loss` hard stop loss threshold
 - `Pred_len` prediction horizon (e.g. 40 days)  
 
