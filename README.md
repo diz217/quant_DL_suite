@@ -49,12 +49,22 @@ For detailed explanations of each version and design change, see the README file
     python transformer/TST_run_yr_yield.py
     python transformer/cal_sharpe.py
 ```
-To backtest the trading strategy based on the transformer model, run the two scripts in sequence. The first script (```TST_run_yr_yield.py```) generate trading signals from price predictions and take-profit recommendations, which include positions (long/short) and target prices, or no actions if the risk-reward ratio is unfavorable. 
-Based on the actual price actions in the following days, the algorithm updates decisions across different scenarios: stop-outs, missed opportunities, realized gains, or unmet targets. Training, predicting, strategy devising and feedback run sequentially in a rolling window across the full year. 
+To backtest the trading strategy based on the transformer model, run the two scripts in sequence. The first script (```TST_run_yr_yield.py```) generate trading signals from price predictions and take-profit recommendations, including: 
+- positions (long/short)
+- target prices
+- no actions if the risk-reward ratio is unfavorable.
+- 
+Based on the actual price actions in the following days, the algorithm updates decisions across different scenarios:
+- stop-outs
+- missed opportunities
+- realized gains
+- unmet targets.
+
+The first script runs Training, predicting, strategy devising and feedback run sequentially in a rolling window across the full year. 
 
 The second script (```cal_sharpe.py```) aggregates performance by computing cumulative yield and statistical metrics such as Sharpe ratio and peak-to-trough drawdown.
 
-Superparameters such as training data length, random seed, and stop-loss threshold, and prediction length need to be specified in the scripts. The trading algorithm parameters directly affect the performance of the profit-taking strategy and the backtesting results.
+Superparameters such as **training data length**, random seed, and **stop-loss threshold**, and **prediction length** need to be specified in the scripts. The trading algorithm parameters directly affect the performance of the profit-taking strategy and the backtesting results.
 
 ## Results
 Representative outputs from the models are shown below.
