@@ -90,9 +90,9 @@ Sharpe ratio, total yield, maximum drawback from running 'cal_sharpe.py'. Repres
 
 Price predictions:
 ![Transformer windowed Predicted Prices](results/Price_prediction_TST_v0p8.png)  
-Profit-taking predictions:
+Profit-taking trainings:
 ![Transformer windowed Profit-taking returns](results/TP_return_TST_v0p8.png)  
-Loss function reducing in 100 epochs:
+Loss function trainings (plotted against epochs): 
 ![Transformer Training Loss](results/Loss_training_TST_v0p8.png)  
 
 ## Directory 
