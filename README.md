@@ -53,7 +53,7 @@ To backtest the trading strategy based on the transformer model, run the two scr
 - positions (long/short)
 - target prices
 - no actions if the risk-reward ratio is unfavorable.
-- 
+ 
 Based on the actual price actions in the following days, the algorithm updates decisions across different scenarios:
 - stop-outs
 - missed opportunities
@@ -64,7 +64,11 @@ The first script runs Training, predicting, strategy devising and feedback run s
 
 The second script (```cal_sharpe.py```) aggregates performance by computing cumulative yield and statistical metrics such as Sharpe ratio and peak-to-trough drawdown.
 
-Superparameters such as **training data length**, random seed, and **stop-loss threshold**, and **prediction length** need to be specified in the scripts. The trading algorithm parameters directly affect the performance of the profit-taking strategy and the backtesting results.
+Superparameters such as 
+- training data length
+- stop-loss threshold
+- prediction length
+need to be specified in the scripts. The trading algorithm parameters directly affect the performance of the profit-taking strategy and the backtesting results.
 
 ## Results
 Representative outputs from the models are shown below.
