@@ -73,7 +73,13 @@ The script contains very important superparameters:
 The trading algorithm parameters directly affect the performance of the profit-taking strategy. Sensible prediction horizion + stop_loss combinations are crucial to a large profit and stable performance. 
 
 ## Results
-Representative outputs from the models are shown below.
+
+**Backtesting**
+Sharpe ratio, total yield, maximum drawback from running 'cal_sharpe.py'. Representative results include two negatively-correlated stocks over the same time period:
+!['TSLA' Backtested Per-Trade Yields with transformer-based trading strategy](results/TSLA_yield_sharpe_40_2019-08-20_v1.png)
+!['GM' Backtested Per-Trade Yields with transformer-based trading strategy](results/GM_yield_sharpe_40_2019-08-20_v1.png)
+
+Predictive outputs from running `TST_run_.py`:
 
 **Transformer (TST_v0p95 & TST_v0p8)**  
 ![Transformer windowed Predicted Prices](results/Price_prediction_TST_v0p8.png)  
