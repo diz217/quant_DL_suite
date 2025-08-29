@@ -75,13 +75,20 @@ The trading algorithm parameters directly affect the performance of the profit-t
 ## Results
 
 **Backtesting**
+
 Sharpe ratio, total yield, maximum drawback from running 'cal_sharpe.py'. Representative results include two negatively-correlated stocks over the same time period:
+
+2024-2025:
 !['TSLA' Backtested Per-Trade Yields with transformer-based trading strategy](results/TSLA_yield_sharpe_40_2019-08-20_v1.png)
 !['GM' Backtested Per-Trade Yields with transformer-based trading strategy](results/GM_yield_sharpe_40_2019-08-20_v1.png)
 
-Predictive outputs from running `TST_run_.py`:
+2018-2019:
+!['TSLA' Backtested Per-Trade Yields with transformer-based trading strategy](results/TSLA_yield_sharpe_40_2013-08-20_v1.png)
+!['GM' Backtested Per-Trade Yields with transformer-based trading strategy](results/GM_yield_sharpe_40_2013-08-20_v1.png)
 
-**Transformer (TST_v0p95 & TST_v0p8)**  
+**Transformer (TST_v0p95 & TST_v0p8)** 
+
+Predictive outputs from running `TST_run_.py`:
 ![Transformer windowed Predicted Prices](results/Price_prediction_TST_v0p8.png)  
 ![Transformer windowed Profit-taking returns](results/TP_return_TST_v0p8.png)  
 ![Transformer Training Loss](results/Loss_training_TST_v0p8.png)  
