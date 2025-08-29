@@ -43,15 +43,18 @@ Parameters can be adjusted directly in the scripts (about 30-40 parameters), suc
 - `seed` random seed    
 
 For detailed explanations of each version and design change, see the README files inside the `LSTM/` and `transformer/` subfolders.
+
 **Backtesting (Sharpe, Yield, Drawdown)**:
 ```
     python transformer/TST_run_yr_yield.py
     python transformer/cal_sharpe.py
 ```
-To check and backtest the trading strategy based ont the transformer model, one may execute both scripts in sequence. The first script (```TST_run_yr_yield.py```) devises the trading strategy using price predictions and take-profit recommendations, which include positions (long/short) and target prices, or no actions if the risk-reward ratio is low. 
-From the feedback of actual price actions, the algorithm makes further decisions across different scenarios: stop-outs, missed opportunities, realized gains, or missed targets. The training, predicting, strategy devising and feedback is running for a whole year, the aggregated yield and statsitical analysis is calculated in the second file (```cal_sharpe.py```)
+To backtest the trading strategy based on the transformer model, run the two scripts in sequence. The first script (```TST_run_yr_yield.py```) generate trading signals from price predictions and take-profit recommendations, which include positions (long/short) and target prices, or no actions if the risk-reward ratio is unfavorable. 
+Based on the actual price actions in the following days, the algorithm updates decisions across different scenarios: stop-outs, missed opportunities, realized gains, or unmet targets. Training, predicting, strategy devising and feedback run sequentially in a rolling window across the full year. 
 
-Superparameters such as total sampling number, random seed, and stop-loss thresholds need to be specified in the scripts. The trading algorithm parameters directly affect both the profit-taking strategy and the backtesting results.
+The second script (```cal_sharpe.py```) aggregates performance by computing cumulative yield and statistical metrics such as Sharpe ratio and peak-to-trough drawdown.
+
+Superparameters such as training data length, random seed, and stop-loss threshold, and prediction length need to be specified in the scripts. The trading algorithm parameters directly affect the performance of the profit-taking strategy and the backtesting results.
 
 ## Results
 Representative outputs from the models are shown below.
