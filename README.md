@@ -64,11 +64,12 @@ The first script runs Training, predicting, strategy devising and feedback run s
 
 The second script (```cal_sharpe.py```) aggregates performance by computing cumulative yield and statistical metrics such as Sharpe ratio and peak-to-trough drawdown.
 
-Superparameters such as 
-- training data length
-- stop-loss threshold
-- prediction length
-need to be specified in the scripts. The trading algorithm parameters directly affect the performance of the profit-taking strategy and the backtesting results.
+The script contains very important superparameters: 
+- `Start`,`end` training data window
+- `Stop_loss` hard stop loss threshold
+- `Pred_len` prediction horizon (e.g. 40 days)  
+
+The trading algorithm parameters directly affect the performance of the profit-taking strategy. Sensible prediction horizion + stop_loss combinations are crucial to a large profit and stable performance. 
 
 ## Results
 Representative outputs from the models are shown below.
